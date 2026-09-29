@@ -30,7 +30,21 @@
                         <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
                         <li class="nav-item"><a class="nav-link" href="#portfolio">Portfolio</a></li>
                         <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-                        <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-primary rounded-pill px-4 py-2 shadow-sm" href="{{ url('/login') }}">Login</a></li>
+                        @guest
+                            <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-primary rounded-pill px-4 py-2 shadow-sm" href="{{ route('login') }}">Login</a></li>
+                        @else
+                            @if(Auth::user()->role === 'admin')
+                                <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-primary rounded-pill px-4 py-2 shadow-sm" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                            @elseif(Auth::user()->role === 'kasir')
+                                <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-success rounded-pill px-4 py-2 shadow-sm" href="{{ route('kasir.dashboard') }}">Dashboard</a></li>
+                            @endif
+                            <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                                <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-light rounded-pill px-3 py-2 shadow-sm">Logout</button>
+                                </form>
+                            </li>
+                        @endguest
                     </ul>
                 </div>
             </div>
