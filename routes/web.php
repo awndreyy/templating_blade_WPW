@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KasirController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman Landing Page (Frontend)
@@ -10,13 +11,13 @@ Route::get('/', function () {
     return view('frontend');
 })->name('home');
 
-// Autentikasi (Hanya untuk tamu / belum login)
+// Autentikasi
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// Logout (Hanya untuk pengguna terotentikasi)
+// Logout)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // Role Admin
@@ -25,6 +26,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', function () {
         return redirect()->route('admin.dashboard');
     });
+
+    // Resource Route Product
+    Route::resource('/admin/products', ProductController::class);
 });
 
 // Role Kasir
