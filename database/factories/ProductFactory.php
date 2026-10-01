@@ -55,6 +55,8 @@ class ProductFactory extends Factory
         $name = $baseName.' '.fake()->unique()->numberBetween(1, 10000);
 
         return [
+            'code' => 'PRD-'.fake()->unique()->numerify('#####'),
+            'barcode' => '899'.fake()->unique()->numerify('#########'),
             'name' => $name,
             'category' => $category,
             'description' => fake()->sentence(12),

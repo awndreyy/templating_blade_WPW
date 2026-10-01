@@ -34,6 +34,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // Role Kasir
 Route::middleware(['auth', 'role:kasir'])->group(function () {
     Route::get('/kasir/dashboard', [KasirController::class, 'dashboard'])->name('kasir.dashboard');
+    Route::post('/kasir/transaksi', [KasirController::class, 'storeTransaction'])->name('kasir.transaksi.store');
     Route::get('/kasir', function () {
         return redirect()->route('kasir.dashboard');
     });
