@@ -30,7 +30,7 @@
         <!-- Top Navigation Bar -->
         <nav class="navbar navbar-expand-lg navbar-light bg-white pos-topbar sticky-top">
             <div class="container-fluid px-2 px-md-3">
-                
+
                 <!-- Left: Brand / Store Badge -->
                 <div class="d-flex align-items-center">
                     <a class="d-flex align-items-center text-decoration-none mr-3" href="{{ route('kasir.dashboard') }}">
@@ -46,7 +46,7 @@
 
                 <!-- Center/Right Menu Quick Action Tools -->
                 <div class="d-flex align-items-center ml-auto">
-                    
+
                     <!-- Quick Menu: Katalog Barang -->
                     <button class="btn btn-sm btn-outline-primary font-weight-bold mr-2" data-toggle="modal" data-target="#modalCariBarang" title="Katalog Barang [F4]">
                         <i class="fas fa-boxes mr-1"></i> <span class="d-none d-sm-inline">Katalog (F4)</span>
@@ -318,7 +318,7 @@
                                     </div>
 
                                     <!-- Quick Cash Buttons Compact -->
-                                    <div class="d-flex flex-wrap mb-2" style="gap: 3px;">
+                                    <div class="d-flex flex-wrap mb-2" id="quickCashContainer" style="gap: 3px;">
                                         <button type="button" class="quick-cash-chip py-0 px-1" onclick="setExactAmount()">[Pas]</button>
                                         <button type="button" class="quick-cash-chip py-0 px-1" onclick="addCashAmount(10000)">+10k</button>
                                         <button type="button" class="quick-cash-chip py-0 px-1" onclick="addCashAmount(20000)">+20k</button>
@@ -327,7 +327,6 @@
                                         <button type="button" class="quick-cash-chip py-0 px-1" onclick="setCashAmount(200000)">200k</button>
                                     </div>
 
-                                    <!-- Payment Methods Compact (6 Metode) -->
                                     <label class="pos-card-title mb-1" style="font-size: 0.7rem;">Metode Pembayaran</label>
                                     <div class="row no-gutters mb-1" style="gap: 3px;">
                                         <button type="button" class="btn-payment-method active py-1" id="btnMethodTunai" onclick="selectPaymentMethod('Tunai')">
@@ -352,7 +351,6 @@
                                         </button>
                                     </div>
 
-                                    <!-- KEMBALIAN DISPLAY COMPACT -->
                                     <div class="kembalian-display-box positive mono py-1 px-2 mb-2" id="boxKembalian">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="text-uppercase text-muted font-weight-bold" style="font-size: 0.7rem;" id="labelKembalian">KEMBALIAN</span>
@@ -360,7 +358,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- ACTION BUTTONS: [Tahan] [Batal] and [ BAYAR & CETAK ] -->
                                     <div class="row mb-1 no-gutters">
                                         <div class="col-6 pr-1">
                                             <button type="button" class="btn btn-sm btn-warning btn-block font-weight-bold py-1 mono text-dark" style="font-size: 0.75rem;" onclick="holdCurrentOrder()">
@@ -374,7 +371,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Main BAYAR & CETAK Button -->
                                     <button type="button" class="btn-checkout mono mt-1 py-2 font-weight-bold" style="font-size: 0.95rem;" id="btnBayarCetak" onclick="processCheckout()">
                                         <i class="fas fa-print mr-2"></i> [ BAYAR & CETAK (F9) ]
                                     </button>
@@ -444,10 +440,10 @@
                             </thead>
                             <tbody id="modalProductListTable">
                                 @forelse($products as $prod)
-                                    <tr class="product-search-row" 
-                                        data-name="{{ strtolower($prod->name) }}" 
+                                    <tr class="product-search-row"
+                                        data-name="{{ strtolower($prod->name) }}"
                                         data-code="{{ strtolower($prod->code ?? '') }}"
-                                        data-barcode="{{ $prod->barcode ?? '' }}" 
+                                        data-barcode="{{ $prod->barcode ?? '' }}"
                                         data-category="{{ strtolower($prod->category ?? '') }}">
                                         <td><code>{{ $prod->code ?? '-' }}</code></td>
                                         <td><code>{{ $prod->barcode ?? '-' }}</code></td>
@@ -680,6 +676,7 @@
         let cart = [];
         let catalogProducts = @json($products);
         let selectedPaymentMethod = 'Tunai';
+        let currentTotalAkhir = 0;
         let heldOrders = [];
 
         function formatRupiah(amount) {
@@ -854,27 +851,37 @@
             const taxRp = parseFloat(document.getElementById('inputTaxRp').value) || 0;
             const otherFees = parseFloat(document.getElementById('inputOtherFees').value) || 0;
 
-            const totalAkhir = Math.max(0, subtotal - discountNominal + taxRp + otherFees);
+            currentTotalAkhir = Math.max(0, subtotal - discountNominal + taxRp + otherFees);
 
             document.getElementById('summaryTotalItems').innerText = totalItemsCount;
             document.getElementById('summarySubtotal').innerText = formatRupiah(subtotal);
             document.getElementById('summaryDiscountRp').innerText = formatRupiah(discountNominal);
-            document.getElementById('displayTotalAkhir').innerText = formatRupiah(totalAkhir);
+            document.getElementById('displayTotalAkhir').innerText = formatRupiah(currentTotalAkhir);
+
+            if (selectedPaymentMethod !== 'Tunai') {
+                document.getElementById('inputUangDibayar').value = currentTotalAkhir;
+            }
 
             calculateKembalian();
         }
 
         // Kembalian
         function calculateKembalian() {
-            const totalAkhirText = document.getElementById('displayTotalAkhir').innerText;
-            const totalAkhir = parseInt(totalAkhirText.replace(/[^0-9]/g, '')) || 0;
-
-            const uangDibayar = parseFloat(document.getElementById('inputUangDibayar').value) || 0;
-            const kembalian = uangDibayar - totalAkhir;
-
             const kembalianEl = document.getElementById('displayKembalian');
             const kembalianBox = document.getElementById('boxKembalian');
             const labelKembalian = document.getElementById('labelKembalian');
+
+            if (selectedPaymentMethod !== 'Tunai') {
+                labelKembalian.innerText = 'METODE BAYAR';
+                labelKembalian.className = 'text-uppercase text-muted font-weight-bold';
+                kembalianEl.innerText = `Lunas (${selectedPaymentMethod})`;
+                kembalianEl.className = 'font-weight-bold text-success';
+                kembalianBox.className = 'kembalian-display-box positive mono py-1 px-2 mb-2';
+                return;
+            }
+
+            const uangDibayar = parseFloat(document.getElementById('inputUangDibayar').value) || 0;
+            const kembalian = uangDibayar - currentTotalAkhir;
 
             if (kembalian >= 0) {
                 labelKembalian.innerText = 'KEMBALIAN';
@@ -892,18 +899,22 @@
         }
 
         function setExactAmount() {
-            const totalAkhirText = document.getElementById('displayTotalAkhir').innerText;
-            const totalAkhir = parseInt(totalAkhirText.replace(/[^0-9]/g, '')) || 0;
-            document.getElementById('inputUangDibayar').value = totalAkhir;
+            document.getElementById('inputUangDibayar').value = currentTotalAkhir;
             calculateKembalian();
         }
 
         function setCashAmount(val) {
+            if (selectedPaymentMethod !== 'Tunai') {
+                selectPaymentMethod('Tunai');
+            }
             document.getElementById('inputUangDibayar').value = val;
             calculateKembalian();
         }
 
         function addCashAmount(val) {
+            if (selectedPaymentMethod !== 'Tunai') {
+                selectPaymentMethod('Tunai');
+            }
             const current = parseFloat(document.getElementById('inputUangDibayar').value) || 0;
             document.getElementById('inputUangDibayar').value = current + val;
             calculateKembalian();
@@ -912,7 +923,8 @@
         // Select Payment Method (Tunai, QRIS, Debit, Transfer, Kredit, E-Wallet)
         function selectPaymentMethod(method) {
             selectedPaymentMethod = method;
-            ['Tunai', 'QRIS', 'Debit', 'Transfer', 'Kredit', 'E-Wallet'].forEach(m => {
+            const methods = ['Tunai', 'QRIS', 'Debit', 'Transfer', 'Kredit', 'E-Wallet'];
+            methods.forEach(m => {
                 const btn = document.getElementById(`btnMethod${m}`);
                 if (btn) {
                     if (m === method) {
@@ -923,9 +935,21 @@
                 }
             });
 
+            const cashInput = document.getElementById('inputUangDibayar');
+            const quickCash = document.getElementById('quickCashContainer');
+
             if (method !== 'Tunai') {
-                setExactAmount();
+                cashInput.value = currentTotalAkhir;
+                cashInput.readOnly = true;
+                cashInput.classList.add('bg-light');
+                if (quickCash) quickCash.style.opacity = '0.5';
+            } else {
+                cashInput.readOnly = false;
+                cashInput.classList.remove('bg-light');
+                if (quickCash) quickCash.style.opacity = '1';
             }
+
+            calculateKembalian();
         }
 
         // Live Search Dropdown Logic
@@ -1073,7 +1097,7 @@
                     selectProductFromLiveSearch(currentFilteredProducts[0]);
                 } else {
                     const query = this.value.trim().toLowerCase();
-                    const exactMatch = catalogProducts.find(p => 
+                    const exactMatch = catalogProducts.find(p =>
                         (p.barcode && p.barcode.toLowerCase() === query) ||
                         (p.code && p.code.toLowerCase() === query)
                     );
@@ -1211,21 +1235,17 @@
             }
         }
 
-        // =========================================================================
-        // Process Checkout [BAYAR & CETAK] -> Ajax Simpan Transaksi & Kurangi Stok
-        // =========================================================================
         function processCheckout() {
             if (cart.length === 0) {
                 alert('Keranjang belanja kosong! Silakan tambahkan barang terlebih dahulu.');
                 return;
             }
 
-            const totalAkhirText = document.getElementById('displayTotalAkhir').innerText;
-            const totalAkhir = parseInt(totalAkhirText.replace(/[^0-9]/g, '')) || 0;
             const uangDibayar = parseFloat(document.getElementById('inputUangDibayar').value) || 0;
 
-            if (selectedPaymentMethod === 'Tunai' && uangDibayar < totalAkhir) {
-                alert(`Uang yang dibayarkan masih kurang ${formatRupiah(totalAkhir - uangDibayar)}. Silakan periksa kembali nominal uang!`);
+            if (selectedPaymentMethod === 'Tunai' && uangDibayar < currentTotalAkhir) {
+                alert(`Uang yang dibayarkan masih kurang ${formatRupiah(currentTotalAkhir - uangDibayar)}. Silakan periksa kembali nominal uang!`);
+                document.getElementById('inputUangDibayar').focus();
                 return;
             }
 
@@ -1244,7 +1264,7 @@
                 tax_amount: taxRpVal,
                 other_fees: otherFeeVal,
                 payment_method: selectedPaymentMethod,
-                cash_paid: selectedPaymentMethod === 'Tunai' ? uangDibayar : totalAkhir,
+                cash_paid: selectedPaymentMethod === 'Tunai' ? uangDibayar : currentTotalAkhir,
                 items: cart.map(i => ({ id: i.id, qty: i.qty, price: i.price }))
             };
 
@@ -1263,7 +1283,12 @@
                 body: JSON.stringify(payload)
             })
             .then(async response => {
-                const resData = await response.json();
+                let resData = {};
+                try {
+                    resData = await response.json();
+                } catch (e) {
+                    throw new Error('Terjadi kesalahan server (Status ' + response.status + ' ' + response.statusText + '). Silakan cek koneksi atau login kembali.');
+                }
                 if (!response.ok) {
                     throw new Error(resData.message || 'Gagal memproses transaksi.');
                 }

@@ -27,7 +27,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         return redirect()->route('admin.dashboard');
     });
 
-    // Resource Route Product
     Route::resource('/admin/products', ProductController::class);
 });
 

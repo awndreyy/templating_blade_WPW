@@ -41,7 +41,6 @@ class KasirController extends Controller
 
         try {
             return DB::transaction(function () use ($validated, $items) {
-                // 1. Verifikasi ketersediaan barang dan stok
                 $productIds = collect($items)->pluck('id')->all();
                 $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
 
