@@ -6,7 +6,7 @@ use App\Http\Controllers\KasirController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
-// Halaman Landing Page (Frontend)
+// Halaman Landing Page
 Route::get('/', function () {
     return view('frontend');
 })->name('home');
