@@ -4,114 +4,131 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource (Pagination 10 items).
-     */
     public function index()
     {
         $products = Product::latest()->paginate(10);
-
         return view('admin.products.index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('admin.products.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    private function validateProduct(Request $request): array
     {
-        Log::info('[ProductController@store] Request data:', $request->except('_token'));
-
-        $validated = $request->validate([
+        return $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image_rotation' => 'nullable|integer|in:0,90,180,270',
         ]);
+    }
 
-        $validated['is_active'] = $request->boolean('is_active');
+    private function processImage(Request $request): string
+    {
+        $manager = new ImageManager(new Driver());
+        $image = $manager->read($request->file('image')->getRealPath());
 
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
+        $rotation = (int) $request->input('image_rotation', 0);
+        if ($rotation !== 0) {
+            $image->rotate($rotation);
         }
 
-        Log::info('[ProductController@store] Validated data:', $validated);
+        $image->cover(800, 800);
 
-        $product = Product::create($validated);
+        $watermarkPath = public_path('img/brand-watermark.png');
+        if (is_file($watermarkPath)) {
+            $image->place($watermarkPath, 'bottom-right', 20, 20, 35);
+        }
 
-        Log::info('[ProductController@store] Product created with ID: '.$product->id);
+        $path = 'products/'.Str::uuid().'.jpg';
+        $encoded = $image->toJpeg(85);
+        Storage::disk('public')->put($path, (string) $encoded);
+
+        return $path;
+    }
+
+    public function store(Request $request)
+    {
+        $data = $this->validateProduct($request);
+        unset($data['image_rotation']);
+        $data['is_active'] = $request->boolean('is_active');
+
+        $newPath = null;
+        try {
+            if ($request->hasFile('image')) {
+                $newPath = $this->processImage($request);
+                $data['image'] = $newPath;
+            }
+            Product::create($data);
+        } catch (\Throwable $e) {
+            if ($newPath) {
+                Storage::disk('public')->delete($newPath);
+            }
+            throw $e;
+        }
 
         return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Product $product)
     {
         return view('admin.products.show', compact('product'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Product $product)
     {
         return view('admin.products.edit', compact('product'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ]);
+        $data = $this->validateProduct($request);
+        unset($data['image_rotation']);
+        $data['is_active'] = $request->boolean('is_active');
 
-        $validated['is_active'] = $request->boolean('is_active');
-
-        if ($request->hasFile('image')) {
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
+        $newPath = null;
+        $oldPath = $product->image;
+        try {
+            if ($request->hasFile('image')) {
+                $newPath = $this->processImage($request);
+                $data['image'] = $newPath;
+            } else {
+                unset($data['image']);
             }
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $product->update($data);
+        } catch (\Throwable $e) {
+            if ($newPath) {
+                Storage::disk('public')->delete($newPath);
+            }
+            throw $e;
         }
 
-        $product->update($validated);
+        if ($newPath && $oldPath && $oldPath !== $newPath) {
+            Storage::disk('public')->delete($oldPath);
+        }
 
         return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Product $product)
     {
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
-        }
-
+        $imagePath = $product->image;
         $product->delete();
+        if ($imagePath) {
+            Storage::disk('public')->delete($imagePath);
+        }
 
         return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus!');
     }

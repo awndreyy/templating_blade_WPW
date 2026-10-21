@@ -155,6 +155,15 @@
                                     accept="image/jpeg,image/png,image/jpg,image/webp"
                                     onchange="previewImage(this)">
                                 <small class="text-muted">Biarkan kosong jika tidak ingin mengubah foto.</small>
+                            <div class="form-group mt-3">
+                                <label for="image_rotation" class="font-weight-bold">Rotasi Gambar</label>
+                                <select name="image_rotation" id="image_rotation" class="form-control">
+                                    @foreach ([0 => 'Tanpa rotasi', 90 => '90°', 180 => '180°', 270 => '270°'] as $degree => $label)
+                                        <option value="{{ $degree }}" {{ old('image_rotation', 0) == $degree ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Saat upload, foto otomatis di-crop dan di-resize menjadi 800×800 piksel serta diberi watermark.</small>
+                            </div>
                             @error('image')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
