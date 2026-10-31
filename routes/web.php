@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\LaporanController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman Landing Page
@@ -24,9 +25,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/admin', function () {
-        return redirect()->route('admin.dashboard');
+    return redirect()->route('admin.dashboard');
     });
-
+    Route::get('/admin/laporan/produk', [LaporanController::class, 'produk'])->name('laporan.produk');
     Route::resource('/admin/products', ProductController::class);
 });
 

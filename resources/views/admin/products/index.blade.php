@@ -6,9 +6,14 @@
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Daftar Produk</h1>
-        <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50 mr-1"></i> Tambah Produk
-        </a>
+        <div class="d-flex flex-wrap align-items-center" style="gap: 8px;">
+            <a href="{{ route('laporan.produk') }}" class="btn btn-danger btn-sm">
+                <i class="fas fa-file-pdf fa-sm mr-1"></i> Unduh PDF
+            </a>
+            <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50 mr-1"></i> Tambah Produk
+            </a>
+        </div>
     </div>
 
     <!-- DataTable Card -->
