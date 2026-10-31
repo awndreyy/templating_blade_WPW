@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -19,11 +20,15 @@
 
     <!-- Custom styles for this template-->
     <link href="{{ asset('css/sb-admin-2.min.css') }}" rel="stylesheet">
+    @vite('resources/js/app.js')
     @stack('styles')
 
 </head>
 
 <body id="page-top">
+
+    <div data-order-broadcast-channel="orders.admin" aria-live="polite"
+        class="position-fixed" style="top: 1rem; right: 1rem; z-index: 1100; width: min(92vw, 370px);"></div>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
