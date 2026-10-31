@@ -20,9 +20,13 @@
 
     <!-- Dedicated Light POS Custom Styles -->
     <link href="{{ asset('css/pos-kasir.css') }}" rel="stylesheet">
+    @vite('resources/js/app.js')
 </head>
 
 <body id="page-top">
+
+    <div data-order-broadcast-channel="user.{{ auth()->id() }}" aria-live="polite"
+        class="position-fixed" style="top: 1rem; right: 1rem; z-index: 1100; width: min(92vw, 370px);"></div>
 
     <!-- POS Fullscreen Application Wrapper (No Sidebar) -->
     <div class="pos-wrapper">

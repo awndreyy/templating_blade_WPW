@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderPlaced;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Product;
 use App\Models\Transaction;
@@ -148,6 +149,8 @@ class KasirController extends Controller
                     $product->decrement('stock', $detail['quantity']);
                     $updatedStocks[$product->id] = $product->fresh()->stock;
                 }
+
+                OrderPlaced::dispatch($transaction);
 
                 return response()->json([
                     'success' => true,
