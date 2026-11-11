@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ApiAuthController;
+use App\Http\Controllers\MidtransController;
 
 // Route login: tidak perlu token
 Route::post('/login', [ApiAuthController::class, 'login']);
@@ -17,3 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::name('api.')->group(function () {
     Route::apiResource('products', ProductController::class);
 });
+
+Route::post('/midtrans/notification',
+    [MidtransController::class, 'notification']
+);

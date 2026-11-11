@@ -1,7 +1,13 @@
 {
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
     "laravel-echo": "^2.6.3",
     "laravel-vite-plugin": "^3.2.0",
-    "pusher-js": "^8.6.0"
+    "pusher-js": "^8.6.0",
+    "tailwindcss": "^4.3.5"
   }
 }

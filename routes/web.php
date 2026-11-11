@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\MidtransController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman Landing Page
@@ -38,4 +40,8 @@ Route::middleware(['auth', 'role:kasir'])->group(function () {
     Route::get('/kasir', function () {
         return redirect()->route('kasir.dashboard');
     });
+    Route::get('/kasir/print-test', [ReceiptController::class, 'print'])->name('kasir.print.test');
+    Route::get('/kasir/midtrans-demo', [MidtransController::class, 'index'])->name('midtrans.demo');
+    Route::post('/checkout', [MidtransController::class, 'checkout'])->name('midtrans.checkout');
+    Route::get('/midtrans/status/{orderId}', [MidtransController::class, 'status'])->name('midtrans.status');
 });
