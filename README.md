@@ -56,3 +56,45 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Panel Admin Filament (BKPM Minggu 13 - Acara 33 & 34)
+
+Project ini menggunakan FilamentPHP 3.x untuk panel administrator di `/admin`.
+Versi Filament minimal 3.3.54 dipakai agar kompatibel dengan Laravel 13.
+
+### Instalasi / pembaruan dependensi
+
+```bash
+composer update filament/filament -W
+php artisan migrate
+php artisan storage:link
+php artisan optimize:clear
+```
+
+Panel provider sudah disiapkan di `app/Providers/Filament/AdminPanelProvider.php` dan didaftarkan melalui `bootstrap/providers.php`, sehingga tidak perlu membuat panel kedua.
+
+### Membuat akun administrator
+
+```bash
+php artisan make:filament-user
+```
+
+Setelah user dibuat, pastikan role-nya `admin` karena akses panel hanya diberikan kepada role tersebut:
+
+```bash
+php artisan tinker
+```
+
+```php
+App\\Models\\User::where('email', 'email-admin@contoh.com')->update(['role' => 'admin']);
+```
+
+Buka `http://127.0.0.1:8000/admin` dan login menggunakan akun tersebut. Akun dengan role `kasir` tidak dapat masuk ke panel Filament.
+
+### Implementasi Acara 33 dan 34
+
+- `CategoryResource`: CRUD kategori produk.
+- `ProductResource`: CRUD produk, upload gambar, relasi kategori, pencarian, sorting, badge stok, dan filter.
+- `StatsOverview`: ringkasan jumlah kategori, produk, stok menipis, dan transaksi.
+- Navigasi Resource dikelompokkan pada `Manajemen Master`.
+- Migrasi kategori menambahkan tabel `categories` dan `products.category_id`, sekaligus mengonversi kategori teks yang sudah ada. Kolom `products.category` lama tetap dipertahankan untuk kompatibilitas halaman kasir, laporan, API, dan Blade yang sudah ada.
