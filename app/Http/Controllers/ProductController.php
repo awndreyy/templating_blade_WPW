@@ -14,6 +14,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::latest()->paginate(10);
+
         return view('admin.products.index', compact('products'));
     }
 
@@ -37,7 +38,7 @@ class ProductController extends Controller
 
     private function processImage(Request $request): string
     {
-        $manager = new ImageManager(new Driver());
+        $manager = new ImageManager(new Driver);
         $image = $manager->read($request->file('image')->getRealPath());
 
         $rotation = (int) $request->input('image_rotation', 0);

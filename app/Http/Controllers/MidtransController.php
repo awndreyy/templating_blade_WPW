@@ -4,26 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
 
-class MidtransController extends Controller{
-    public function __construct(){
+class MidtransController extends Controller
+{
+    public function __construct()
+    {
         Config::$serverKey = config('midtrans.serverKey');
         Config::$isProduction = config('midtrans.isProduction');
         Config::$isSanitized = config('midtrans.isSanitized');
         Config::$is3ds = config('midtrans.is3ds');
     }
 
-    public function index(){
+    public function index()
+    {
         return view('midtrans.checkout');
     }
 
-    public function checkout(Request $request){
+    public function checkout(Request $request)
+    {
         $price = 50000;
-        $orderId = 'ORDER-' . Str::uuid();
+        $orderId = 'ORDER-'.Str::uuid();
 
         $order = Order::create([
             'order_id' => $orderId,
@@ -75,7 +79,8 @@ class MidtransController extends Controller{
         }
     }
 
-    public function notification(Request $request){
+    public function notification(Request $request)
+    {
         $data = $request->all();
 
         $orderId = $data['order_id'] ?? '';
@@ -83,10 +88,10 @@ class MidtransController extends Controller{
         $grossAmount = $data['gross_amount'] ?? '';
         $signature = $data['signature_key'] ?? '';
 
-        if (!is_string($orderId)
-            || !is_scalar($statusCode)
-            || !is_scalar($grossAmount)
-            || !is_string($signature)) {
+        if (! is_string($orderId)
+            || ! is_scalar($statusCode)
+            || ! is_scalar($grossAmount)
+            || ! is_string($signature)) {
             return response()->json([
                 'message' => 'Invalid notification',
             ], 400);
@@ -95,12 +100,12 @@ class MidtransController extends Controller{
         $expectedSignature = hash(
             'sha512',
             $orderId
-            . $statusCode
-            . $grossAmount
-            . config('midtrans.serverKey')
+            .$statusCode
+            .$grossAmount
+            .config('midtrans.serverKey')
         );
 
-        if (!hash_equals($expectedSignature, $signature)) {
+        if (! hash_equals($expectedSignature, $signature)) {
             return response()->json([
                 'message' => 'Invalid signature',
             ], 403);
@@ -108,13 +113,13 @@ class MidtransController extends Controller{
 
         $order = Order::where('order_id', $orderId)->first();
 
-        if (!$order) {
+        if (! $order) {
             return response()->json([
                 'message' => 'Order not found',
             ], 404);
         }
 
-        if (!is_numeric($grossAmount)
+        if (! is_numeric($grossAmount)
             || (float) $grossAmount != (float) $order->gross_amount) {
             return response()->json([
                 'message' => 'Invalid amount',
@@ -122,22 +127,32 @@ class MidtransController extends Controller{
         }
 
         $transactionStatus = $data['transaction_status'] ?? '';
-        $fraudStatus = $data['fraud_status'] ?? '';
+        $fraudStatus = $data['fraud_status'] ?? null;
 
-        $newStatus = match ($transactionStatus) {
-            'settlement' => 'paid',
-            'capture' => $fraudStatus === 'accept'
-                ? 'paid'
-                : 'pending',
-            'pending' => 'pending',
-            'deny', 'cancel', 'expire', 'failure' => 'failed',
+        $isFraudAccepted = $fraudStatus === null
+            || $fraudStatus === 'accept';
+
+        $isSuccessful = (string) $statusCode === '200'
+            && $isFraudAccepted;
+
+        $newStatus = match (true) {
+            $transactionStatus === 'settlement'
+                && $isSuccessful => 'paid',
+
+            $transactionStatus === 'capture'
+                && $isSuccessful => 'paid',
+
+            $transactionStatus === 'pending' => 'pending',
+
+            in_array($transactionStatus, [
+                'deny', 'cancel', 'expire', 'failure',
+            ], true) => 'failed',
+
             default => null,
         };
 
-        // Jangan mengubah pembayaran yang sudah paid
-        // menjadi pending/gagal akibat notifikasi terlambat.
         if ($newStatus !== null
-            && !($order->status === 'paid' && $newStatus !== 'paid')) {
+            && ! ($order->status === 'paid' && $newStatus !== 'paid')) {
             $order->update(['status' => $newStatus]);
         }
 
@@ -146,7 +161,8 @@ class MidtransController extends Controller{
         ]);
     }
 
-    public function status(string $orderId){
+    public function status(string $orderId)
+    {
         $order = Order::where('order_id', $orderId)
             ->firstOrFail();
 

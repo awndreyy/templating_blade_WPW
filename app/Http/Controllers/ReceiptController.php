@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-use Mike42\Escpos\Printer;
-use Mike42\Escpos\PrintConnectors\FilePrintConnector;
-use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
-class ReceiptController extends Controller{
-    public function print(){
+use Mike42\Escpos\PrintConnectors\FilePrintConnector;
+use Mike42\Escpos\Printer;
+
+class ReceiptController extends Controller
+{
+    public function print()
+    {
         $printer = null;
         try {
             $path = storage_path('app/struk-test.bin');

@@ -9,16 +9,17 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void{
-    Schema::create('orders', function (Blueprint $table) {
-        $table->id();
-        $table->string('order_id')->unique();
-        $table->string('product_name');
-        $table->unsignedBigInteger('gross_amount');
-        $table->string('status')->default('pending');
-        $table->string('snap_token')->nullable();
-        $table->timestamps();
-    });
+    public function up(): void
+    {
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->string('order_id')->unique();
+            $table->string('product_name');
+            $table->unsignedBigInteger('gross_amount');
+            $table->string('status')->default('pending');
+            $table->string('snap_token')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
